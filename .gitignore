@@ -42,6 +42,7 @@ frontend/node_modules/
 frontend/dist/
 frontend/.vite/
 frontend/.cache/
+*.tsbuildinfo
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -67,4 +68,3 @@ outputs/
 *.url
 start_cooler_system_desktop.ps1
 启动固定管板式冷却器系统.cmd
-
