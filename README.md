@@ -1,84 +1,115 @@
-# 固定管板式管壳式煤油冷却器设计程序
+# 固定管板式管壳式煤油冷却器设计系统
 
-本项目是一个面向课程设计的 Python 3.11+ 命令行程序，用于完成固定管板式管壳式煤油冷却器的传热计算、结构计算和阻力计算。程序采用统一 SI 单位、`dataclass` 数据模型和可追踪中间量输出，便于复核与撰写设计说明书。
+这是一个面向课程设计的换热器辅助设计项目，使用 Python 完成固定管板式管壳式煤油冷却器的传热计算、结构计算和阻力计算，并提供桌面 GUI、FastAPI 后端和 React 前端仪表盘。
 
-## 项目简介
+项目特点：
+- 统一使用 SI 单位
+- 核心计算过程可追踪、可测试
+- 使用 `dataclass` 组织主要数据模型
+- 物性数据通过 CSV 表和线性插值得到
+- 同时提供命令行、桌面界面和 Web 展示界面
 
-- 热侧介质：煤油，壳程流动
-- 冷侧介质：冷却水，管内流动
-- 设计任务：完成热负荷、LMTD/F 修正、面积初选、几何筛选、总传热系数校核与压降校核
-- 深度定位：课程设计版，优先使用教材中常见、便于解释的简化关联式
+## 功能概览
+- 传热计算：热负荷、冷却水流量、LMTD、修正系数、总传热系数、面积校核
+- 结构计算：管长候选筛选、管数分配、壳径和挡板间距估算
+- 阻力计算：管程 / 壳程流速、Re、压降与约束校核
+- 结果整理：Markdown / Excel / Word 导出、课程设计说明书素材
+- 前端展示：工程计算仪表盘风格结果页
 
-## 运行方式
+## 项目结构
+
+```text
+shell_and_tube_cooler/
+├─ backend/                  FastAPI 后端
+├─ data/                     物性表和默认配置
+├─ docs/                     课程设计说明书素材
+├─ frontend/                 React + Vite 前端
+├─ scripts/                  启动与导出脚本
+├─ src/                      Python 核心计算模块
+├─ tests/                    单元测试
+├─ config.py                 配置与工程假设
+├─ main.py                   命令行入口
+├─ report_data.py            报表数据构建
+└─ ui_app.py                 桌面 GUI 入口
+```
+
+## 环境要求
+- Python 3.11+
+- Node.js 18+
+- npm
+
+## 快速开始
+
+### 1. 命令行运行
 
 ```bash
 python main.py
 ```
 
-若本机 `python` 命令不可用，可改用显式 Python 路径运行。
-
-图形界面版本可通过以下命令启动：
+### 2. 桌面 GUI
 
 ```bash
 python ui_app.py
 ```
 
-界面支持导入 JSON 参数文件、回填表单、执行计算并导出结果摘要。
+### 3. 后端服务
 
-## Web 后端（第一阶段）
-
-项目已新增 `FastAPI` 后端骨架，计算核心仍然复用现有 `run_design(config)`。
-
-安装依赖后，可通过以下命令启动：
+项目后端默认运行在 `8010` 端口：
 
 ```bash
-uvicorn backend.app:app --reload
+python -m uvicorn backend.app:app --host 127.0.0.1 --port 8010
 ```
 
-启动后可访问：
+接口文档：
+- `http://127.0.0.1:8010/docs`
 
-- `GET /api/health`
-- `GET /api/design/default-config`
-- `POST /api/design/run`
-- `POST /api/design/import/json`
-- `POST /api/design/import/excel`
-- `POST /api/design/export/excel`
-- `POST /api/design/export/word`
+### 4. 前端界面
 
-接口详细说明见 [docs/backend_api.md](/C:/Users/wh/Desktop/分类文档/换热器程序设计/shell_and_tube_cooler/docs/backend_api.md)。
+前端目录：
 
-## 目录说明
-
-```text
-shell_and_tube_cooler/
-├─ README.md
-├─ requirements.txt
-├─ main.py
-├─ config.py
-├─ report_data.py
-├─ data/
-├─ src/
-├─ tests/
-└─ docs/
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
-## 假设说明
+默认开发地址：
+- `http://127.0.0.1:5173`
 
-- 统一采用 SI 单位，输入温度接口使用 ℃，物性表存储温度为 K
-- 管内走水、壳程走煤油
+前端通过 `/api` 代理到本地后端；默认代理目标为 `http://127.0.0.1:8010`。
+
+## 测试
+
+Python 测试：
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+前端构建校验：
+
+```bash
+cd frontend
+npm run build
+```
+
+## 设计假设
+- 管内走水，壳程走煤油
 - 默认采用 1 壳程、2 管程
-- 使用两阶段总传热系数策略：`U_assumed` 用于面积初选，`U_calculated` 用于热阻校核
-- 壳程几何量统一由 `src/geometry.py` 定义，其他模块不得重复定义壳程当量直径或横流面积
-- 若方案不满足面积、速度或压降约束，程序自动迭代候选；全部失败时抛出工程化异常
+- 物性参数由 `data/kerosene.csv` 和 `data/water.csv` 插值得到
+- 总传热系数采用“两阶段策略”：
+  - `U_assumed` 用于初选面积
+  - `U_calculated` 用于热阻校核
+- 壳程几何中间量统一由 `src/geometry.py` 提供
 
-## 样例输出说明
+## 主要文档
+- `docs/report_outline.md`：说明书目录建议
+- `docs/report_tables.md`：结果表模板
+- `docs/design_notes.md`：设计说明素材
+- `docs/thermal_notes.md`：传热公式与说明
+- `docs/hydraulic_notes.md`：阻力计算说明
+- `docs/backend_api.md`：后端接口说明
+- `docs/frontend_architecture.md`：前端结构说明
 
-默认配置下，程序会输出四组表格：
-
-- `input`：题目工况输入
-- `properties`：冷热侧代表物性
-- `thermal`：热工计算结果
-- `mechanical`：结构与几何候选结果
-- `hydraulic`：流速、Re 和压降校核结果
-
-若使用图形界面，左侧为参数文件导入与工程假设输入区，右侧按“传热计算、结构计算、阻力计算、综合结论、计算日志”分栏展示结果。
+## 当前版本
+- `v1.0`：完成课程设计版核心计算、测试、桌面 GUI、FastAPI 后端和 React 前端仪表盘

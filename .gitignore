@@ -56,9 +56,14 @@ pnpm-debug.log*
 .env.production.local
 frontend/.env
 frontend/.env.local
+frontend/vite.config.js
+frontend/vite.config.d.ts
+frontend/tailwind.config.js
+frontend/tailwind.config.d.ts
 
 # Generated outputs
 outputs/
+scripts/_design_export_payload.json
 
 # Test / runtime artifacts
 .hypothesis/
